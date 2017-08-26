@@ -1,4 +1,14 @@
 {
+-- |
+-- Module      : $Header$
+-- Description : Parser for ALang S-Expressions
+-- Copyright   : (c) Sebastian Ertel, Justus Adam 2017. All Rights Reserved.
+-- License     : EPL-1.0
+-- Maintainer  : sebastian.ertel@gmail.com, dev@justus.science
+-- Stability   : experimental
+-- Portability : portable
+
+-- This source code is licensed under the terms described in the associated LICENSE.TXT file
 {-# LANGUAGE OverloadedStrings #-}
 module Ohua.Compat.SExpr.Parser where
 

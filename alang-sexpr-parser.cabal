@@ -6,8 +6,7 @@ name:                alang-sexpr-parser
 version:             0.1.0.0
 homepage:            https://github.com/JustusAdam/alang-sexpr-parser#readme
 bug-reports:         https://github.com/JustusAdam/alang-sexpr-parser/issues
-license:             BSD3
-license-file:        LICENSE
+license:             OtherLicense
 author:              Justus Adam
 maintainer:          dev@justus.science
 copyright:           © 2017 Justus Adam

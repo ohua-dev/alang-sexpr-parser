@@ -4,7 +4,7 @@ category: Devel
 author: Justus Adam
 maintainer: dev@justus.science
 copyright: © 2017 Justus Adam
-license: BSD3
+license: OtherLicense
 github: JustusAdam/alang-sexpr-parser
 extra-source-files:
 - README.md
