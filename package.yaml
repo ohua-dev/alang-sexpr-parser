@@ -19,6 +19,7 @@ library:
   - bytestring
   - text
   - array
+  - unordered-containers
   build-tools:
   - alex
   - happy

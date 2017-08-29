@@ -6,7 +6,6 @@
 -- License     : EPL-1.0
 -- Maintainer  : sebastian.ertel@gmail.com, dev@justus.science
 -- Stability   : experimental
--- Portability : portable
 
 -- This source code is licensed under the terms described in the associated LICENSE.TXT file
 {-# LANGUAGE BangPatterns #-}
@@ -54,20 +53,22 @@ $sep = [$white \,]
 {
 
 data Lexeme
-    = LParen
-    | RParen
-    | LBracket
-    | RBracket
-    | KWLet
-    | KWFn
-    | KWDefalgo
-    | KWRequire
-    | KWRun
-    | KWNS
-    | Id Binding
+    = LParen -- ^ @(@
+    | RParen -- ^ @)@
+    | LBracket -- ^ @[@
+    | RBracket -- ^ @]@
+    | KWLet -- ^ keyword @let@
+    | KWFn  -- ^ keyword @fn@
+    | KWDefalgo -- ^ keyword @defalgo@
+    | KWRequire -- ^ keyword @require@
+    | KWRun -- ^ keyword @run@
+    | KWNS -- ^ keyword @ns@ (namespace)
+    | Id Binding -- ^ an identifier
     deriving Show
 
 
+-- | Tokenize a lazy bytestring into lexemes
+lex :: BS.ByteString -> [Lexeme]
 lex = alexScanTokens
 
 }
