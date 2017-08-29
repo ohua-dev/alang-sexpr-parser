@@ -35,14 +35,18 @@ $sep = [$white \,]
 
 :-
 
-    "("     { const LParen }
-    ")"     { const RParen }
-    "["     { const LBracket }
-    "]"     { const RBracket }
-    "let"   { const KWLet }
-    "fn"    { const KWFn }
-    @id     { Id . Binding . L.decodeUtf8 . BS.toStrict }
-    $sep    ;
+    "("         { const LParen }
+    ")"         { const RParen }
+    "["         { const LBracket }
+    "]"         { const RBracket }
+    "let"       { const KWLet }
+    "fn"        { const KWFn }
+    "defalgo"   { const KWDefalgo }
+    "require"   { const KWRequire }
+    "ns"        { const KWNS }
+    "run"       { const KWRun }
+    @id         { Id . Binding . L.decodeUtf8 . BS.toStrict }
+    $sep        ;
 
     $reserved { \s -> error $ "Reserved symbol: " ++ BS.unpack s }
 
@@ -56,6 +60,10 @@ data Lexeme
     | RBracket
     | KWLet
     | KWFn
+    | KWDefalgo
+    | KWRequire
+    | KWRun
+    | KWNS
     | Id Binding
     deriving Show
 

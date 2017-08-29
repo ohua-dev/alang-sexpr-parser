@@ -8,7 +8,7 @@ import Ohua.Types
 import Prelude hiding (lex)
 
 
-lp = parse . lex
+lp = parseExp . lex
 
 main :: IO ()
 main = hspec $ do
