@@ -43,7 +43,7 @@ $sep = [$white \,]
     "defalgo"   { const KWDefalgo }
     "require"   { const KWRequire }
     "ns"        { const KWNS }
-    "run"       { const KWRun }
+    "if"        { const KWIf }
     @id         { Id . Binding . L.decodeUtf8 . BS.toStrict }
     $sep        ;
 
@@ -61,7 +61,7 @@ data Lexeme
     | KWFn  -- ^ keyword @fn@
     | KWDefalgo -- ^ keyword @defalgo@
     | KWRequire -- ^ keyword @require@
-    | KWRun -- ^ keyword @run@
+    | KWIf -- ^ keyword @if@
     | KWNS -- ^ keyword @ns@ (namespace)
     | Id Binding -- ^ an identifier
     deriving Show

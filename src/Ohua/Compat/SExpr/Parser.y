@@ -39,7 +39,7 @@ import Data.Either
     defalgo { KWDefalgo }
     require { KWRequire }
     ns      { KWNS }
-    run     { KWRun }
+    if      { KWIf }
     '('     { LParen }
     ')'     { RParen }
     '['     { LBracket }
@@ -49,38 +49,38 @@ import Data.Either
 
 Exp 
     : '(' Form ')'  { $2 }
-    | id            { Var (Local $1) }
+    | id            { Var $1 }
 
 Form
     : let '[' Binds ']' Stmts { $3 $5 }
     | fn '[' Params ']' Stmts { $3 $5 }
-    | Apply { $1 }
+    | if Exp Exp Exp          { "ohua.lang/if" `Apply` $2 `Apply` Lambda "_" $3 `Apply` Lambda "_" $4 }
+    | Apply                   { $1 }
 
 Apply
     : Exp { $1 }
     | Apply Exp { Apply $1 $2 }
 
 Binds
-    : Assign Exp Binds { Let $1 $2 . $3 }
-    | Assign Exp { Let $1 $2 }
+    : Assign Exp Binds  { Let $1 $2 . $3 }
+    | Assign Exp        { Let $1 $2 }
 
 Params 
     : Assign Params { Lambda $1 . $2 }
-    | Assign { Lambda $1 }
+    | Assign        { Lambda $1 }
 
 Stmts
     : Exp Stmts { Let "_" $1 $2 }
-    | Exp { $1 }
+    | Exp       { $1 }
 
 Assign
-    : id { Direct $1 }
-    | '[' Ids ']' { Destructure $2 }
+    : id            { Direct $1 }
+    | '[' Ids ']'   { Destructure $2 }
 
-Ids : id Ids { $1 : $2 }
-    | id { [$1] }
+Ids : id Ids    { $1 : $2 }
+    | id        { [$1] }
 
-NS  : NSHeader Decls RunDecl    { ($1, $2, Just $3) }
-    | NSHeader Decls            { ($1, $2, Nothing) }
+NS  : NSHeader Decls { ($1, $2) }
 
 NSHeader 
     : '(' ns id ')' { $3 }
@@ -105,14 +105,11 @@ ReferList
     : id ReferList  { $1 : $2 }
     |               { [] }
 
-RunDecl 
-    : '(' run Stmts ')' { $3 }
-
 {
 
 
 -- | Parse a stream of tokens into a simple ALang expression
-parseExp :: [Lexeme] -> Expression
+parseExp :: [Lexeme] -> Expr Binding
 parseExp = parseExpH
 
 parseError :: [Lexeme] -> a
@@ -120,10 +117,10 @@ parseError tokens = error $ "Parse error" ++ show tokens
 
 
 -- | Parse a stream of tokens into a namespace
-parseNS :: [Lexeme] -> Namespace
+parseNS :: [Lexeme] -> Namespace Binding
 parseNS = f . parseNSRaw
   where
-    f (name, decls, runDecl) = Namespace name (concat requires) algos runDecl
+    f (name, decls) = Namespace name (concat requires) algos (HM.lookup "main" algos)
       where
         (requires, algoList) = partitionEithers decls
         algos = HM.fromList algoList -- ignores algos which are defined twice
