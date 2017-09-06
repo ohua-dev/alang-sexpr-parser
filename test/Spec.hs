@@ -1,14 +1,19 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists    #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
-import Test.Hspec
-import Ohua.Compat.SExpr.Lexer
-import Ohua.Compat.SExpr.Parser
-import Ohua.ALang.Lang
-import Ohua.Types
-import Prelude hiding (lex)
+import           Data.ByteString.Lazy     as B
+import           Ohua.ALang.Lang
+import           Ohua.ALang.NS
+import           Ohua.Compat.SExpr.Lexer
+import           Ohua.Compat.SExpr.Parser
+import           Ohua.Types
+import           Test.Hspec
 
+deriving instance Show a => Show (Namespace a)
+deriving instance Eq a => Eq (Namespace a)
 
-lp = parseExp . lex
+lp = parseExp . tokenize
 
 main :: IO ()
 main = hspec $ do
@@ -23,3 +28,18 @@ main = hspec $ do
             lp "(let [a-b a0] -)" `shouldBe` Let "a-b" "a0" "-"
         it "parses longer let binds" $
             lp "(let [a 0 b 1 c (print 6)] a)" `shouldBe` (Let "a" "0" $ Let "b" "1" $ Let "c" ("print" `Apply` "6") "a")
+
+        it "parses the example module" $ (parseNS . tokenize <$> B.readFile "test-resources/something.ohuas")
+            `shouldReturn`
+            Namespace "some_ns"
+                [ ("ohua.math",["add","isZero"]) ]
+                [ ("sqare", Lambda "x" ("add" `Apply` "x" `Apply` "x"))
+                , ("algo1", Lambda "someParam" $
+                        Let "a" ("square" `Apply` "someParam") $
+                        Let "coll0" ("ohua.lang/smap" `Apply` Lambda "i" ("square" `Apply` "i") `Apply` "coll") $
+                        ("ohua.lang/if"
+                            `Apply` ("isZero" `Apply` "a")
+                            `Apply` Lambda "_" "coll0"
+                            `Apply` Lambda "_" "a"))
+                , ("main", Lambda "param"  ("algo0" `Apply` "param"))
+                ] (Just (Lambda "param"  ("algo0" `Apply` "param")))

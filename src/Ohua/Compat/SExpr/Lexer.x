@@ -11,7 +11,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
-module Ohua.Compat.SExpr.Lexer (lex, Lexeme(..)) where
+module Ohua.Compat.SExpr.Lexer (tokenize, Lexeme(..)) where
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as L
@@ -68,7 +68,7 @@ data Lexeme
 
 
 -- | Tokenize a lazy bytestring into lexemes
-lex :: BS.ByteString -> [Lexeme]
-lex = alexScanTokens
+tokenize :: BS.ByteString -> [Lexeme]
+tokenize = alexScanTokens
 
 }

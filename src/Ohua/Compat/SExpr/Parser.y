@@ -90,8 +90,8 @@ Decls
     |                       { [] }
 
 Decl
-    : defalgo id Params Stmts   { Right ($2, $3 $4) }
-    | require Requires          { Left $2 }
+    : defalgo id '[' Params ']' Stmts   { Right ($2, $4 $6) }
+    | require Requires                  { Left $2 }
 
 Requires
     : '[' Require ']' Requires  { $2 : $4 }
