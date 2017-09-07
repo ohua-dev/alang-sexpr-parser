@@ -32,8 +32,9 @@ main = hspec $ do
         it "parses the example module" $ (parseNS . tokenize <$> B.readFile "test-resources/something.ohuas")
             `shouldReturn`
             Namespace "some_ns"
+                [ ("some.module", ["a"]) ]
                 [ ("ohua.math",["add","isZero"]) ]
-                [ ("sqare", Lambda "x" ("add" `Apply` "x" `Apply` "x"))
+                [ ("square", Lambda "x" ("add" `Apply` "x" `Apply` "x"))
                 , ("algo1", Lambda "someParam" $
                         Let "a" ("square" `Apply` "someParam") $
                         Let "coll0" ("ohua.lang/smap" `Apply` Lambda "i" ("square" `Apply` "i") `Apply` "coll") $

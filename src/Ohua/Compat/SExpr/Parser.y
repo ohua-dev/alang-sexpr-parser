@@ -32,18 +32,19 @@ import Data.Either
 
 %token
 
-    id      { Id $$ }
+    id              { Id $$ }
 
-    let     { KWLet }
-    fn      { KWFn }
-    defalgo { KWDefalgo }
-    require { KWRequire }
-    ns      { KWNS }
-    if      { KWIf }
-    '('     { LParen }
-    ')'     { RParen }
-    '['     { LBracket }
-    ']'     { RBracket }
+    let             { KWLet }
+    fn              { KWFn }
+    defalgo         { KWDefalgo }
+    "require-sf"    { KWRequireSf }
+    "require-algo"  { KWRequireAlgo }
+    ns              { KWNS }
+    if              { KWIf }
+    '('             { LParen }
+    ')'             { RParen }
+    '['             { LBracket }
+    ']'             { RBracket }
 
 %%
 
@@ -91,7 +92,8 @@ Decls
 
 Decl
     : defalgo id '[' Params ']' Stmts   { Right ($2, $4 $6) }
-    | require Requires                  { Left $2 }
+    | "require-sf" Requires             { Left (Left $2) }
+    | "require-algo" Requires           { Left (Right $2) }
 
 Requires
     : '[' Require ']' Requires  { $2 : $4 }
@@ -120,8 +122,9 @@ parseError tokens = error $ "Parse error" ++ show tokens
 parseNS :: [Lexeme] -> Namespace Binding
 parseNS = f . parseNSRaw
   where
-    f (name, decls) = Namespace name (concat requires) algos (HM.lookup "main" algos)
+    f (name, decls) = Namespace name (concat algoRequires) (concat sfRequires) algos (HM.lookup "main" algos)
       where
         (requires, algoList) = partitionEithers decls
+        (sfRequires, algoRequires) = partitionEithers requires
         algos = HM.fromList algoList -- ignores algos which are defined twice
 }
