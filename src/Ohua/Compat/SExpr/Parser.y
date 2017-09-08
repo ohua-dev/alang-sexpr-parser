@@ -21,6 +21,7 @@ import Ohua.Types
 import Ohua.ALang.NS
 import qualified Data.HashMap.Strict as HM
 import Data.Either
+import qualified Ohua.ParseTools.Refs as Refs
 
 }
 
@@ -32,7 +33,8 @@ import Data.Either
 
 %token
 
-    id              { Id $$ }
+    id              { Id (Unqual $$) }
+    var             { Id $$ }
 
     let             { KWLet }
     fn              { KWFn }
@@ -50,12 +52,12 @@ import Data.Either
 
 Exp 
     : '(' Form ')'  { $2 }
-    | id            { Var $1 }
+    | var           { Var $1 }
 
 Form
     : let '[' Binds ']' Stmts { $3 $5 }
     | fn '[' Params ']' Stmts { $3 $5 }
-    | if Exp Exp Exp          { "ohua.lang/if" `Apply` $2 `Apply` Lambda "_" $3 `Apply` Lambda "_" $4 }
+    | if Exp Exp Exp          { Refs.ifBuiltin `Apply` $2 `Apply` Lambda "_" $3 `Apply` Lambda "_" $4 }
     | Apply                   { $1 }
 
 Apply
@@ -111,7 +113,7 @@ ReferList
 
 
 -- | Parse a stream of tokens into a simple ALang expression
-parseExp :: [Lexeme] -> Expr Binding
+parseExp :: [Lexeme] -> Expr SomeBinding
 parseExp = parseExpH
 
 parseError :: [Lexeme] -> a
@@ -119,10 +121,10 @@ parseError tokens = error $ "Parse error" ++ show tokens
 
 
 -- | Parse a stream of tokens into a namespace
-parseNS :: [Lexeme] -> Namespace Binding
+parseNS :: [Lexeme] -> Namespace SomeBinding
 parseNS = f . parseNSRaw
   where
-    f (name, decls) = Namespace name (concat algoRequires) (concat sfRequires) algos (HM.lookup "main" algos)
+    f (name, decls) = Namespace name (concat algoRequires) (concat sfRequires) algos
       where
         (requires, algoList) = partitionEithers decls
         (sfRequires, algoRequires) = partitionEithers requires

@@ -23,13 +23,14 @@ import Prelude hiding (lex)
 %wrapper "basic-bytestring"
 
 $char = [a-zA-Z]
-$sym  = [\-\>\<\.\$\*\+\?\~\^\/\=_]
+$sym  = [\-\>\<\$\*\+\?\~\^\=_]
 $numerical = [0-9]
 $reserved = [@\#:\{\}]
 $idchar = [$numerical $sym $char]
 $sep = [$white \,]
 
 @id = $idchar+
+@ns = $idchar+ (\. $idchar+)*
 
 
 :-
@@ -45,10 +46,12 @@ $sep = [$white \,]
     "require-algo"  { const KWRequireAlgo }
     "ns"            { const KWNS }
     "if"            { const KWIf }
-    @id             { Id . Binding . L.decodeUtf8 . BS.toStrict }
+    @id             { Id . Unqual . convertId }
+    @ns\/@id        { Id . Qual . mkQualId }
+    @ns             { NSId . mkNSRef }
     $sep            ;
 
-    $reserved { \s -> error $ "Reserved symbol: " ++ BS.unpack s }
+    $reserved       { \s -> error $ "Reserved symbol: " ++ BS.unpack s }
 
 
 {
@@ -65,8 +68,23 @@ data Lexeme
     | KWRequireAlgo -- ^ keyword @require-algo@
     | KWIf -- ^ keyword @if@
     | KWNS -- ^ keyword @ns@ (namespace)
-    | Id Binding -- ^ an identifier
+    | Id SomeBinding -- ^ an identifier
+    | NSId NSRef -- ^ an identifier for a namespace
     deriving Show
+
+
+convertId :: ByteString.ByteString -> Binding
+convertId = Binding . L.decodeUtf8 . BS.toStrict
+
+
+mkQualId :: BS.ByteString -> QualifiedBinding
+mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name)
+  where
+    (nsstr, name) = BS.break (== '/') str
+
+
+mkNSRef :: BS.ByteString -> NSRef
+mkNSRef = nsRefFromList . map Binding . T.split (== '.') . L.decodeUtf8 . BS.toStrict
 
 
 -- | Tokenize a lazy bytestring into lexemes
