@@ -30,7 +30,7 @@ $idchar = [$numerical $sym $char]
 $sep = [$white \,]
 
 @id = $idchar+
-@ns = $idchar+ (\. $idchar+)*
+@ns = @id (\. @id)*
 
 
 :-
@@ -46,8 +46,8 @@ $sep = [$white \,]
     "require-algo"  { const KWRequireAlgo }
     "ns"            { const KWNS }
     "if"            { const KWIf }
-    @id             { Id . Unqual . convertId }
-    @ns\/@id        { Id . Qual . mkQualId }
+    @id             { UnqualId . convertId }
+    @ns\/@id        { QualId . mkQualId }
     @ns             { NSId . mkNSRef }
     $sep            ;
 
@@ -68,7 +68,8 @@ data Lexeme
     | KWRequireAlgo -- ^ keyword @require-algo@
     | KWIf -- ^ keyword @if@
     | KWNS -- ^ keyword @ns@ (namespace)
-    | Id SomeBinding -- ^ an identifier
+    | UnqualId Binding -- ^ an identifier
+    | QualId QualifiedBinding
     | NSId NSRef -- ^ an identifier for a namespace
     deriving Show
 
@@ -80,7 +81,8 @@ convertId = Binding . L.decodeUtf8 . BS.toStrict
 mkQualId :: BS.ByteString -> QualifiedBinding
 mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name)
   where
-    (nsstr, name) = BS.break (== '/') str
+    (nsstr, name') = BS.break (== '/') str
+    name = BS.tail name'
 
 
 mkNSRef :: BS.ByteString -> NSRef

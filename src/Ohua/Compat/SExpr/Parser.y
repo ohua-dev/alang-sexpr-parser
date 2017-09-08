@@ -33,8 +33,9 @@ import qualified Ohua.ParseTools.Refs as Refs
 
 %token
 
-    id              { Id (Unqual $$) }
-    var             { Id $$ }
+    id              { UnqualId $$ }
+    qualid          { QualId $$ }
+    nsid            { NSId $$ }
 
     let             { KWLet }
     fn              { KWFn }
@@ -50,9 +51,17 @@ import qualified Ohua.ParseTools.Refs as Refs
 
 %%
 
+SomeId 
+    : id     { Unqual $1 }
+    | qualid { Qual $1 }
+
+NsId 
+    : id    { nsRefFromList [$1] }
+    | nsid  { $1 }
+
 Exp 
     : '(' Form ')'  { $2 }
-    | var           { Var $1 }
+    | SomeId        { Var $1 }
 
 Form
     : let '[' Binds ']' Stmts { $3 $5 }
@@ -86,7 +95,7 @@ Ids : id Ids    { $1 : $2 }
 NS  : NSHeader Decls { ($1, $2) }
 
 NSHeader 
-    : '(' ns id ')' { $3 }
+    : '(' ns NsId ')' { $3 }
 
 Decls 
     : '(' Decl ')' Decls    { $2 : $4 }
@@ -102,8 +111,8 @@ Requires
     |                           { [] }
 
 Require
-    : id '[' ReferList ']'  { ($1, $3) }
-    | id                    { ($1, []) }
+    : NsId '[' ReferList ']'  { ($1, $3) }
+    | NsId                    { ($1, []) }
 
 ReferList 
     : id ReferList  { $1 : $2 }
