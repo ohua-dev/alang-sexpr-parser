@@ -66,7 +66,7 @@ Exp
 Form
     : let '[' Binds ']' Stmts { $3 $5 }
     | fn '[' Params ']' Stmts { $3 $5 }
-    | if Exp Exp Exp          { Refs.ifBuiltin `Apply` $2 `Apply` Lambda "_" $3 `Apply` Lambda "_" $4 }
+    | if Exp Exp Exp          { Refs.ifBuiltin `Apply` $2 `Apply` ignoreArgLambda $3 `Apply` ignoreArgLambda $4 }
     | Apply                   { $1 }
 
 Apply
@@ -82,7 +82,7 @@ Params
     | Assign        { Lambda $1 }
 
 Stmts
-    : Exp Stmts { Let "_" $1 $2 }
+    : Exp Stmts { ignoreArgLet $1 $2 }
     | Exp       { $1 }
 
 Assign
@@ -119,6 +119,9 @@ ReferList
     |               { [] }
 
 {
+
+ignoreArgLambda = Lambda (Direct "_")
+ignoreArgLet = Let (Direct "_")
 
 
 -- | Parse a stream of tokens into a simple ALang expression

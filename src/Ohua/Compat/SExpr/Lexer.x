@@ -13,11 +13,10 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 module Ohua.Compat.SExpr.Lexer (tokenize, Lexeme(..)) where
 
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as L
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Ohua.Types
 import Prelude hiding (lex)
+import qualified Ohua.Util.Str as Str
 }
 
 %wrapper "basic-bytestring"
@@ -75,7 +74,7 @@ data Lexeme
 
 
 convertId :: ByteString.ByteString -> Binding
-convertId = Binding . L.decodeUtf8 . BS.toStrict
+convertId = Binding . Str.fromString . BS.unpack
 
 
 mkQualId :: BS.ByteString -> QualifiedBinding
@@ -86,7 +85,7 @@ mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name)
 
 
 mkNSRef :: BS.ByteString -> NSRef
-mkNSRef = nsRefFromList . map Binding . T.split (== '.') . L.decodeUtf8 . BS.toStrict
+mkNSRef = nsRefFromList . map convertId . BS.split '.'
 
 
 -- | Tokenize a lazy bytestring into lexemes
