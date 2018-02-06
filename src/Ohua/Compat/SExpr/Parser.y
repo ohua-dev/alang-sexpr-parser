@@ -133,7 +133,7 @@ parseError tokens = error $ "Parse error" ++ show tokens
 
 
 -- | Parse a stream of tokens into a namespace
-parseNS :: [Lexeme] -> Namespace SomeBinding
+parseNS :: [Lexeme] -> Namespace (Expr SomeBinding)
 parseNS = f . parseNSRaw
   where
     f (name, decls) = Namespace name (concat algoRequires) (concat sfRequires) algos
