@@ -1,7 +1,9 @@
 resolver: lts-9.1
 packages:
 - .
-- location: ohua-core
+- location:
+    git: git@github.com:ohua-dev/ohua-core
+    commit: 22a1187ae5d57cc935729b20a69f627cd773e6f3
   extra-dep: true
 extra-deps: []
 flags: {}
