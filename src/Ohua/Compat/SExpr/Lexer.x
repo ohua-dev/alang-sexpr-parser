@@ -74,7 +74,7 @@ data Lexeme
 
 
 convertId :: ByteString.ByteString -> Binding
-convertId = Binding . Str.fromString . BS.unpack
+convertId = makeThrow . Str.fromString . BS.unpack
 
 
 mkQualId :: BS.ByteString -> QualifiedBinding
@@ -85,7 +85,7 @@ mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name)
 
 
 mkNSRef :: BS.ByteString -> NSRef
-mkNSRef = nsRefFromList . map convertId . BS.split '.'
+mkNSRef = makeThrow . map convertId . BS.split '.'
 
 
 -- | Tokenize a lazy bytestring into lexemes

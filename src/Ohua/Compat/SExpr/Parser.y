@@ -56,7 +56,7 @@ SomeId
     | qualid { Qual $1 }
 
 NsId 
-    : id    { nsRefFromList [$1] }
+    : id    { makeThrow [$1] :: NSRef }
     | nsid  { $1 }
 
 Exp 
