@@ -14,14 +14,16 @@ module Ohua.Compat.SExpr.Parser
     , Namespace(..)
     ) where
 
+import Protolude
+
 import Ohua.Compat.SExpr.Lexer
-import qualified Data.Text as T
 import Ohua.ALang.Lang
 import Ohua.Types
 import Ohua.ALang.NS
 import qualified Data.HashMap.Strict as HM
-import Data.Either
 import qualified Ohua.ParseTools.Refs as Refs
+
+import Prelude (String, (!!), error)
 
 }
 
@@ -51,15 +53,15 @@ import qualified Ohua.ParseTools.Refs as Refs
 
 %%
 
-SomeId 
+SomeId
     : id     { Unqual $1 }
     | qualid { Qual $1 }
 
-NsId 
+NsId
     : id    { makeThrow [$1] :: NSRef }
     | nsid  { $1 }
 
-Exp 
+Exp
     : '(' Form ')'  { $2 }
     | SomeId        { Var $1 }
 
@@ -77,7 +79,7 @@ Binds
     : Assign Exp Binds  { Let $1 $2 . $3 }
     | Assign Exp        { Let $1 $2 }
 
-Params 
+Params
     : Assign Params { Lambda $1 . $2 }
     | Assign        { Lambda $1 }
 
@@ -94,10 +96,10 @@ Ids : id Ids    { $1 : $2 }
 
 NS  : NSHeader Decls { ($1, $2) }
 
-NSHeader 
+NSHeader
     : '(' ns NsId ')' { $3 }
 
-Decls 
+Decls
     : '(' Decl ')' Decls    { $2 : $4 }
     |                       { [] }
 
@@ -114,7 +116,7 @@ Require
     : NsId '[' ReferList ']'  { ($1, $3) }
     | NsId                    { ($1, []) }
 
-ReferList 
+ReferList
     : id ReferList  { $1 : $2 }
     |               { [] }
 
@@ -129,7 +131,7 @@ parseExp :: [Lexeme] -> Expr SomeBinding
 parseExp = parseExpH
 
 parseError :: [Lexeme] -> a
-parseError tokens = error $ "Parse error" ++ show tokens
+parseError tokens = panic $ "Parse error " <> show tokens
 
 
 -- | Parse a stream of tokens into a namespace

@@ -1,5 +1,5 @@
 name: alang-sexpr-parser
-version: '0.1.0.0'
+version: '0.1.0'
 category: Devel
 author: Sebastian Ertel, Justus Adam
 maintainer: dev@justus.science
@@ -8,16 +8,19 @@ license: OtherLicense
 github: ohua-dev/alang-sexpr-parser
 extra-source-files:
 - README.md
+dependencies:
+- base >=4.7 && <5
+- ohua-core
+- bytestring
+- protolude
+default-extensions:
+- NoImplicitPrelude
 library:
   source-dirs: src
   exposed-modules:
   - Ohua.Compat.SExpr.Lexer
   - Ohua.Compat.SExpr.Parser
   dependencies:
-  - base >=4.7 && <5
-  - ohua-core
-  - bytestring
-  - text
   - array
   - unordered-containers
   build-tools:
@@ -32,8 +35,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - base
     - alang-sexpr-parser
     - hspec
-    - ohua-core
-    - bytestring

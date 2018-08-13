@@ -13,10 +13,11 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 module Ohua.Compat.SExpr.Lexer (tokenize, Lexeme(..)) where
 
+import Protolude
+import Protolude.Error
+
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Ohua.Types
-import Prelude hiding (lex)
-import qualified Ohua.Util.Str as Str
 }
 
 %wrapper "basic-bytestring"
@@ -50,7 +51,7 @@ $sep = [$white \,]
     @ns             { NSId . mkNSRef }
     $sep            ;
 
-    $reserved       { \s -> error $ "Reserved symbol: " ++ BS.unpack s }
+    $reserved       { \s -> panic $ "Reserved symbol: " <> toS s }
 
 
 {
@@ -74,7 +75,7 @@ data Lexeme
 
 
 convertId :: ByteString.ByteString -> Binding
-convertId = makeThrow . Str.fromString . BS.unpack
+convertId = makeThrow . toS
 
 
 mkQualId :: BS.ByteString -> QualifiedBinding
