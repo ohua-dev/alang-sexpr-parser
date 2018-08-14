@@ -13,11 +13,12 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 module Ohua.Compat.SExpr.Lexer (tokenize, Lexeme(..)) where
 
-import Protolude
-import Protolude.Error
+import Protolude hiding (undefined)
 
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Ohua.Types
+
+import Prelude (undefined, error)
 }
 
 %wrapper "basic-bytestring"
