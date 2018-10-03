@@ -1,12 +1,13 @@
 # Parses simple S-Expressions into ALang
 
+[![Build Status](https://travis-ci.org/ohua-dev/alang-sexpr-parser.svg?branch=master)](https://travis-ci.org/ohua-dev/alang-sexpr-parser)
 
 An example for a standalone ohua module using the lisp-like syntax
 
 ```clojure
 (ns some_ns)
-    
-    
+
+
 (require [ohua.math [add isZero]])
 
 (defalgo sqare [x]
