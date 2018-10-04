@@ -1,20 +1,20 @@
 {-# LANGUAGE OverloadedLists    #-}
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE StandaloneDeriving #-}
-
-import Protolude
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+import Ohua.Prelude
 
 import           Data.ByteString.Lazy     as B
 import           Ohua.ALang.Lang
 import           Ohua.ALang.NS
 import           Ohua.Compat.SExpr.Lexer
 import           Ohua.Compat.SExpr.Parser
-import           Ohua.Types
 import           Test.Hspec
 
 deriving instance Show a => Show (Namespace a)
 deriving instance Eq a => Eq (Namespace a)
 
+lp :: B.ByteString -> Expr SomeBinding
 lp = parseExp . tokenize
 
 main :: IO ()

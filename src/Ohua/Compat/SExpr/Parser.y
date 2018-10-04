@@ -14,16 +14,15 @@ module Ohua.Compat.SExpr.Parser
     , Namespace(..)
     ) where
 
-import Protolude
+import Ohua.Prelude
 
 import Ohua.Compat.SExpr.Lexer
 import Ohua.ALang.Lang
-import Ohua.Types
 import Ohua.ALang.NS
 import qualified Data.HashMap.Strict as HM
 import qualified Ohua.ParseTools.Refs as Refs
 
-import Prelude (String, (!!), error)
+import Prelude ((!!))
 
 }
 
@@ -131,7 +130,7 @@ parseExp :: [Lexeme] -> Expr SomeBinding
 parseExp = parseExpH
 
 parseError :: [Lexeme] -> a
-parseError tokens = panic $ "Parse error " <> show tokens
+parseError tokens = error $ "Parse error " <> show tokens
 
 
 -- | Parse a stream of tokens into a namespace

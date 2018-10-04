@@ -10,15 +10,14 @@
 -- This source code is licensed under the terms described in the associated LICENSE.TXT file
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -funbox-strict-fields #-}
+{-# OPTIONS_GHC -funbox-strict-fields -fno-warn-unused-imports #-}
 module Ohua.Compat.SExpr.Lexer (tokenize, Lexeme(..)) where
 
-import Protolude hiding (undefined)
+import Ohua.Prelude hiding (undefined)
 
 import qualified Data.ByteString.Lazy.Char8 as BS
-import Ohua.Types
 
-import Prelude (undefined, error)
+import Prelude (undefined)
 }
 
 %wrapper "basic-bytestring"
@@ -52,7 +51,7 @@ $sep = [$white \,]
     @ns             { NSId . mkNSRef }
     $sep            ;
 
-    $reserved       { \s -> panic $ "Reserved symbol: " <> toS s }
+    $reserved       { \s -> error $ "Reserved symbol: " <> decodeUtf8 s }
 
 
 {
@@ -76,14 +75,14 @@ data Lexeme
 
 
 convertId :: ByteString.ByteString -> Binding
-convertId = makeThrow . toS
+convertId = makeThrow . decodeUtf8
 
 
 mkQualId :: BS.ByteString -> QualifiedBinding
-mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name)
+mkQualId str = QualifiedBinding (mkNSRef nsstr) (convertId name0)
   where
     (nsstr, name') = BS.break (== '/') str
-    name = BS.tail name'
+    name0 = BS.tail name'
 
 
 mkNSRef :: BS.ByteString -> NSRef
