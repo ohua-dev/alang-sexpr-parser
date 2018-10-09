@@ -8,7 +8,7 @@
 -- Stability   : experimental
 
 -- This source code is licensed under the terms described in the associated LICENSE.TXT file
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 module Ohua.Compat.SExpr.Parser
     ( parseNS, parseExp
     , Namespace(..)
@@ -137,9 +137,12 @@ parseError tokens = error $ "Parse error " <> show tokens
 parseNS :: [Lexeme] -> Namespace (Expr SomeBinding)
 parseNS = f . parseNSRaw
   where
-    f (name, decls) = Namespace name (concat algoRequires) (concat sfRequires) algos
+    f (name, decls0) = (emptyNamespace name :: Namespace SomeBinding)
+      & algoImports .~ concat algoRequires
+      & sfImports .~ concat sfRequires
+      & decls .~ algos
       where
-        (requires, algoList) = partitionEithers decls
+        (requires, algoList) = partitionEithers decls0
         (sfRequires, algoRequires) = partitionEithers requires
         algos = HM.fromList algoList -- ignores algos which are defined twice
 }
