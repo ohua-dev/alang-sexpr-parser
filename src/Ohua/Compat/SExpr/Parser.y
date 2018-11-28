@@ -17,10 +17,9 @@ module Ohua.Compat.SExpr.Parser
 import Ohua.Prelude
 
 import Ohua.Compat.SExpr.Lexer
-import Ohua.ALang.Lang
-import Ohua.ALang.NS
+import Ohua.Frontend.Lang
+import Ohua.Frontend.NS
 import qualified Data.HashMap.Strict as HM
-import qualified Ohua.ParseTools.Refs as Refs
 
 import Prelude ((!!))
 
@@ -41,10 +40,13 @@ import Prelude ((!!))
     let             { KWLet }
     fn              { KWFn }
     defalgo         { KWDefalgo }
-    "require-sf"    { KWRequireSf }
-    "require-algo"  { KWRequireAlgo }
+    nil             { KWNil }
+    require         { KWRequire }
+    sf              { KWSf }
+    algo            { KWAlgo }
     ns              { KWNS }
     if              { KWIf }
+    with            { KWWith }
     '('             { LParen }
     ')'             { RParen }
     '['             { LBracket }
@@ -52,81 +54,99 @@ import Prelude ((!!))
 
 %%
 
-SomeId
-    : id     { Unqual $1 }
-    | qualid { Qual $1 }
+many1 (p)
+    : p many(p) { $1 :| $2 }
+
+many (p)
+    : p many(p)  { $1 : $2 }
+    |            { [] }
+
+many_sep1(p, sep)
+    : p sep many_sep1(p, sep) { let x :| xs = $3 in $1 :| x:xs }
+    | p                       { $1 :| [] }
+
+many_sep(p, sep)
+    : many_sep1(p, sep) { toList $1 }
+    |                   { [] }
+
+opt(p)
+    : p { Just $1 }
+    |   { Nothing }
+
+or(a, b)
+    : a { Left $1 }
+    | b { Right $1 }
+
+form(p)
+    : '(' p ')' { $2 }
+
+vec(p)
+    : '[' p ']' { $2 }
 
 NsId
+    :: { NSRef }
     : id    { makeThrow [$1] :: NSRef }
     | nsid  { $1 }
 
 Exp
-    : '(' Form ')'  { $2 }
-    | SomeId        { Var $1 }
+    :: { Expr }
+    : form(Form)        { $1 }
+    | vec(many(Exp))    { TupE $1 }
+    | id                { VarE $1 }
+    | qualid            { LitE $ FunRefLit $ FunRef $1 Nothing }
 
 Form
-    : let '[' Binds ']' Stmts { $3 $5 }
-    | fn '[' Params ']' Stmts { $3 $5 }
-    | if Exp Exp Exp          { Refs.ifBuiltin `Apply` $2 `Apply` ignoreArgLambda $3 `Apply` ignoreArgLambda $4 }
-    | Apply                   { $1 }
-
-Apply
-    : Exp { $1 }
-    | Apply Exp { Apply $1 $2 }
+    :: { Expr }
+    : let vec(Binds) Stmts        { $2 $3 }
+    | fn vec(many(Pat)) Stmts     { LamE $2 $3 }
+    | if Exp Exp Exp              { IfE $2 $3 $4 }
+    | with Exp Exp                { BindE $2 $3 }
+    | many1(Exp)                  { let fun :| args = $1 in AppE fun args }
 
 Binds
-    : Assign Exp Binds  { Let $1 $2 . $3 }
-    | Assign Exp        { Let $1 $2 }
-
-Params
-    : Assign Params { Lambda $1 . $2 }
-    | Assign        { Lambda $1 }
+    :: { Expr -> Expr }
+    : Pat Exp Binds  { LetE $1 $2 . $3 }
+    | Pat Exp        { LetE $1 $2 }
 
 Stmts
-    : Exp Stmts { ignoreArgLet $1 $2 }
-    | Exp       { $1 }
+    :: { Expr }
+    : many(Exp) { case $1 of
+                      [] -> LitE UnitLit
+                      x:xs -> let safeL = x :| xs in foldr1 StmtE safeL }
 
-Assign
-    : id            { Direct $1 }
-    | '[' Ids ']'   { Destructure $2 }
+Pat
+    :: { Pat }
+    : id                   { VarP $1 }
+    | nil                  { UnitP }
+    | vec(many(Pat))       { TupP $1 }
 
-Ids : id Ids    { $1 : $2 }
-    | id        { [$1] }
-
-NS  : NSHeader Decls { ($1, $2) }
+NS  :: { (NSRef, Expr) }
+    : form(NSHeader) many(form(Decl)) { ($1, $2) }
 
 NSHeader
-    : '(' ns NsId ')' { $3 }
-
-Decls
-    : '(' Decl ')' Decls    { $2 : $4 }
-    |                       { [] }
+    :: { NSRef }
+    : ns NsId { $2 }
 
 Decl
-    : defalgo id '[' Params ']' Stmts   { Right ($2, $4 $6) }
-    | "require-sf" Requires             { Left (Left $2) }
-    | "require-algo" Requires           { Left (Right $2) }
+    :: { Either (Bool, [(NSRef, [Binding])]) (Binding, Expr) }
+    : defalgo id vec(many(Pat)) Stmts       { Right ($2, LamE $3 $4) }
+    | require ReqType vec(many(Require))    { Left ($2, $3) }
 
-Requires
-    : '[' Require ']' Requires  { $2 : $4 }
-    |                           { [] }
+ReqType
+    :: { Bool }
+    : sf   { True }
+    | algo { False }
+
 
 Require
-    : NsId '[' ReferList ']'  { ($1, $3) }
+    :: { (NSRef, [Binding]) }
+    : NsId '[' many(id) ']'   { ($1, $3) }
     | NsId                    { ($1, []) }
-
-ReferList
-    : id ReferList  { $1 : $2 }
-    |               { [] }
 
 {
 
-ignoreArgLambda = Lambda (Direct "_")
-ignoreArgLet = Let (Direct "_")
-
-
 -- | Parse a stream of tokens into a simple ALang expression
-parseExp :: [Lexeme] -> Expr SomeBinding
+parseExp :: [Lexeme] -> Expr
 parseExp = parseExpH
 
 parseError :: [Lexeme] -> a
@@ -134,10 +154,10 @@ parseError tokens = error $ "Parse error " <> show tokens
 
 
 -- | Parse a stream of tokens into a namespace
-parseNS :: [Lexeme] -> Namespace (Expr SomeBinding)
+parseNS :: [Lexeme] -> Namespace Expr
 parseNS = f . parseNSRaw
   where
-    f (name, decls0) = (emptyNamespace name :: Namespace SomeBinding)
+    f (name, decls0) = (emptyNamespace name :: Namespace Expr)
       & algoImports .~ concat algoRequires
       & sfImports .~ concat sfRequires
       & decls .~ algos

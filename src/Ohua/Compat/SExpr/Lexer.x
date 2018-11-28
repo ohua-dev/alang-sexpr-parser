@@ -42,10 +42,13 @@ $sep = [$white \,]
     "let"           { const KWLet }
     "fn"            { const KWFn }
     "defalgo"       { const KWDefalgo }
-    "require-sf"    { const KWRequireSf }
-    "require-algo"  { const KWRequireAlgo }
+    "require"       { const KWRequire }
+    "algo"          { const KWAlgo }
+    "sf"            { const KWSf }
     "ns"            { const KWNS }
     "if"            { const KWIf }
+    "nil"           { const KWNil }
+    "with"          { const KWWith }
     @id             { UnqualId . convertId }
     @ns\/@id        { QualId . mkQualId }
     @ns             { NSId . mkNSRef }
@@ -64,10 +67,13 @@ data Lexeme
     | KWLet -- ^ keyword @let@
     | KWFn  -- ^ keyword @fn@
     | KWDefalgo -- ^ keyword @defalgo@
-    | KWRequireSf -- ^ keyword @require-sf@
-    | KWRequireAlgo -- ^ keyword @require-algo@
+    | KWRequire -- ^ keyword @require@
+    | KWSf
+    | KWAlgo
     | KWIf -- ^ keyword @if@
     | KWNS -- ^ keyword @ns@ (namespace)
+    | KWNil
+    | KWWith
     | UnqualId Binding -- ^ an identifier
     | QualId QualifiedBinding
     | NSId NSRef -- ^ an identifier for a namespace
