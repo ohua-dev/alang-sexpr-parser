@@ -1,8 +1,8 @@
 (ns some_ns)
-    
-    
-(require-sf [ohua.math [add isZero]])
-(require-algo [some.module [a]])
+
+
+(require sf [ohua.math [add isZero]])
+(require algo [some.module [a]])
 
 (defalgo square [x]
     (add x x))

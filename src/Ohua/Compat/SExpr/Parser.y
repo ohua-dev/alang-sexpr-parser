@@ -8,7 +8,7 @@
 -- Stability   : experimental
 
 -- This source code is licensed under the terms described in the associated LICENSE.TXT file
-{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts, LambdaCase, NamedFieldPuns #-}
 module Ohua.Compat.SExpr.Parser
     ( parseNS, parseExp
     , Namespace(..)
@@ -120,7 +120,7 @@ Pat
     | nil                  { UnitP }
     | vec(many(Pat))       { TupP $1 }
 
-NS  :: { (NSRef, Expr) }
+NS  :: { (NSRef, [Decl]) }
     : form(NSHeader) many(form(Decl)) { ($1, $2) }
 
 NSHeader
@@ -128,22 +128,34 @@ NSHeader
     : ns NsId { $2 }
 
 Decl
-    :: { Either (Bool, [(NSRef, [Binding])]) (Binding, Expr) }
-    : defalgo id vec(many(Pat)) Stmts       { Right ($2, LamE $3 $4) }
-    | require ReqType vec(many(Require))    { Left ($2, $3) }
+    :: { Decl }
+    : defalgo id vec(many(Pat)) Stmts       { AlgoDecl $ Algo { algoName = $2, algoCode = LamE $3 $4 } }
+    | require ReqType vec(many(Require))    { ImportDecl $ map (\i -> i { isAlgo = $2 }) $3 }
 
 ReqType
     :: { Bool }
-    : sf   { True }
-    | algo { False }
+    : sf   { False }
+    | algo { True }
 
 
 Require
-    :: { (NSRef, [Binding]) }
-    : NsId '[' many(id) ']'   { ($1, $3) }
-    | NsId                    { ($1, []) }
+    :: { Import }
+    : NsId opt(vec(many(id))) { Import { nsRef = $1, bindings = fromMaybe [] $2 } }
 
 {
+
+data Decl
+    = ImportDecl [Import]
+    | AlgoDecl Algo
+data Import = Import
+    { isAlgo :: Bool
+    , nsRef :: NSRef
+    , bindings :: [Binding]
+    }
+data Algo = Algo
+    { algoName :: Binding
+    , algoCode :: Expr
+    }
 
 -- | Parse a stream of tokens into a simple ALang expression
 parseExp :: [Lexeme] -> Expr
@@ -152,17 +164,23 @@ parseExp = parseExpH
 parseError :: [Lexeme] -> a
 parseError tokens = error $ "Parse error " <> show tokens
 
+partitionDecls :: [Decl] -> ([Import], [Algo])
+partitionDecls = flip foldr' ([],[]) . flip $ \(xs,ys) -> \case
+    ImportDecl i -> (i<>xs, ys)
+    AlgoDecl a -> (xs, a:ys)
 
 -- | Parse a stream of tokens into a namespace
 parseNS :: [Lexeme] -> Namespace Expr
 parseNS = f . parseNSRaw
   where
     f (name, decls0) = (emptyNamespace name :: Namespace Expr)
-      & algoImports .~ concat algoRequires
-      & sfImports .~ concat sfRequires
+      & algoImports .~ map importToTuple algoRequires
+      & sfImports .~ map importToTuple sfRequires
       & decls .~ algos
       where
-        (requires, algoList) = partitionEithers decls0
-        (sfRequires, algoRequires) = partitionEithers requires
-        algos = HM.fromList algoList -- ignores algos which are defined twice
+        (requires, algoList) = partitionDecls decls0
+        sfRequires = filter (not . isAlgo) requires
+        algoRequires = filter isAlgo requires
+        importToTuple Import{nsRef, bindings} = (nsRef, bindings)
+        algos = HM.fromList $ map (\Algo{algoName, algoCode} -> (algoName, algoCode)) algoList -- ignores algos which are defined twice
 }
