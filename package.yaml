@@ -1,5 +1,5 @@
 name: alang-sexpr-parser
-version: '0.1.0'
+version: '0.2.0'
 category: Devel
 author: Sebastian Ertel, Justus Adam
 maintainer: dev@justus.science
@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 dependencies:
 - base >=4.7 && <5
-- ohua-core
+- ohua-core >= 0.3.0
 - bytestring
 default-extensions:
 - NoImplicitPrelude
