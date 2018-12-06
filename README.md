@@ -8,13 +8,14 @@ An example for a standalone ohua module using the lisp-like syntax
 (ns some_ns)
 
 
-(require [ohua.math [add isZero]])
+(require sf [ohua.math [add isZero]])
+(require algo [some.sn [myalgo]])
 
 (defalgo sqare [x]
     (add x x))
 
 (defalgo algo1 [someParam]
-    (let [a (square someParam)
+    (let [a (square (myalgo someParam)
           coll0 (ohua.lang/smap (fn [i] (square i)) coll)]
     (if (isZero a)
         coll0
