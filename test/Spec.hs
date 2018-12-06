@@ -20,14 +20,27 @@ main =
         it "parse an apply" $
             lp "(something a b c)" `shouldBe` (AppE "something" ["a", "b", "c"])
         it "parses a let" $ lp "(let [a b] b)" `shouldBe` LetE "a" "b" "b"
+        describe "literals" $ do
+            it "parses nil as unit" $
+                lp "nil" `shouldBe` LitE UnitLit
+            it "parses integers" $ do
+                lp "0" `shouldBe` LitE (NumericLit 0)
+                lp "1" `shouldBe` LitE (NumericLit 1)
+                lp "4" `shouldBe` LitE (NumericLit 4)
+                lp "100040" `shouldBe` LitE (NumericLit 100040)
+            it "parses negative integers" $ do
+                lp "-1" `shouldBe` LitE (NumericLit (-1))
+                lp "-4" `shouldBe` LitE (NumericLit (-4))
+                lp "-100040" `shouldBe` LitE (NumericLit (-100040))
         it "parses a lambda" $
             lp "(fn [a [b c]] (print a) c)" `shouldBe`
             LamE ["a", ["b", "c"]] (StmtE (AppE "print" ["a"]) "c")
         it "parses an identifier with strange symbols" $
             lp "(let [a-b a0] -)" `shouldBe` LetE "a-b" "a0" "-"
         it "parses longer let binds" $
+            let n = LitE . NumericLit in
             lp "(let [a 0 b 1 c (print 6)] a)" `shouldBe`
-            LetE "a" "0" (LetE "b" "1" $ LetE "c" (AppE "print" ["6"]) "a")
+            LetE "a" (n 0) (LetE "b" (n 1) $ LetE "c" (AppE "print" [n 6]) "a")
         it "parses the example module" $
             (parseNS . tokenize <$> B.readFile "test-resources/something.ohuas") `shouldReturn`
             ((emptyNamespace ["some_ns"] :: Namespace ()) &

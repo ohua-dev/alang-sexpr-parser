@@ -36,6 +36,7 @@ import Prelude ((!!))
     id              { UnqualId $$ }
     qualid          { QualId $$ }
     nsid            { NSId $$ }
+    number          { Number $$ }
 
     let             { KWLet }
     fn              { KWFn }
@@ -92,6 +93,8 @@ Exp
     :: { Expr }
     : form(Form)        { $1 }
     | vec(many(Exp))    { TupE $1 }
+    | number            { LitE $ NumericLit $1 }
+    | nil               { LitE UnitLit }
     | id                { VarE $1 }
     | qualid            { LitE $ FunRefLit $ FunRef $1 Nothing }
 

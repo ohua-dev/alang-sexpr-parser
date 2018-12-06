@@ -17,20 +17,22 @@ import Ohua.Prelude hiding (undefined)
 
 import qualified Data.ByteString.Lazy.Char8 as BS
 
-import Prelude (undefined)
+import Prelude (undefined, read)
 }
 
 %wrapper "basic-bytestring"
 
 $char = [a-zA-Z]
 $sym  = [\-\>\<\$\*\+\?\~\^\=_]
-$numerical = [0-9]
+$num_not_zero = [1-9]
+$numerical = [$num_not_zero 0]
 $reserved = [@\#:\{\}]
 $idchar = [$numerical $sym $char]
 $sep = [$white \,]
 
 @id = $idchar+
 @ns = @id (\. @id)*
+@number = 0 | $num_not_zero $numerical*
 
 
 :-
@@ -49,6 +51,7 @@ $sep = [$white \,]
     "if"            { const KWIf }
     "nil"           { const KWNil }
     "with"          { const KWWith }
+    "-"? @number    { Number . read . BS.unpack }
     @id             { UnqualId . convertId }
     @ns\/@id        { QualId . mkQualId }
     @ns             { NSId . mkNSRef }
@@ -74,6 +77,7 @@ data Lexeme
     | KWNS -- ^ keyword @ns@ (namespace)
     | KWNil
     | KWWith
+    | Number Integer
     | UnqualId Binding -- ^ an identifier
     | QualId QualifiedBinding
     | NSId NSRef -- ^ an identifier for a namespace
