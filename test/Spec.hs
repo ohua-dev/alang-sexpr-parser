@@ -32,6 +32,8 @@ main =
                 lp "-1" `shouldBe` LitE (NumericLit (-1))
                 lp "-4" `shouldBe` LitE (NumericLit (-4))
                 lp "-100040" `shouldBe` LitE (NumericLit (-100040))
+            it "unit is a valid pattern" $
+                lp "(fn [nil] a)" `shouldBe` LamE [UnitP] "a"
         it "parses a lambda" $
             lp "(fn [a [b c]] (print a) c)" `shouldBe`
             LamE ["a", ["b", "c"]] (StmtE (AppE "print" ["a"]) "c")
