@@ -43,6 +43,21 @@ main =
             let n = LitE . NumericLit in
             lp "(let [a 0 b 1 c (print 6)] a)" `shouldBe`
             LetE "a" (n 0) (LetE "b" (n 1) $ LetE "c" (AppE "print" [n 6]) "a")
+        describe "state binding" $ do
+            it "parses a simple state binding" $
+                lp "(with x a)" `shouldBe` BindE "x" "a"
+            it ".. with literal" $ do
+                lp "(with x nil)" `shouldBe` BindE "x" (LitE UnitLit)
+                lp "(with x 1)" `shouldBe` BindE "x" (LitE (NumericLit 1))
+            describe "precedence" $ do
+                it "apply before bind" $
+                    lp "(with x (a b))" `shouldBe` BindE "x" (AppE "a" ["b"])
+                it "parenthesized bind" $
+                    lp "((with x a) b)" `shouldBe` AppE (BindE "x" "a") ["b"]
+                it "let before bind" $
+                    lp "(with x (let [y a] y))" `shouldBe` BindE "x" (LetE "y" "a" "y")
+                it "bind in let" $
+                    lp "(let [y (with x a)] y)" `shouldBe` LetE "y" (BindE "x" "a") "y"
         it "parses the example module" $
             (parseNS . tokenize <$> B.readFile "test-resources/something.ohuas") `shouldReturn`
             ((emptyNamespace ["some_ns"] :: Namespace ()) &
